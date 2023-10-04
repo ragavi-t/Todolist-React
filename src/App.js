@@ -1,75 +1,88 @@
-import './App.css';
-import TaskForm from "./components/TaskForm";
-import Task from "./components/Task";
-import {useEffect, useState} from "react";
+import React, {useState} from 'react'
+
+import './index.css'
 
 function App() {
-  const [tasks,setTasks] = useState([]);
 
-  useEffect(() => {
-    if (tasks.length === 0) return;
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+  // state
+  const [weight, setWeight] = useState()
+  const [height, setHeight] = useState()
+  const [bmi, setBmi] = useState('')
+  const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    const tasks = JSON.parse(localStorage.getItem('tasks'));
-    setTasks(tasks || []);
-  }, []);
 
-  function addTask(name) {
-    setTasks(prev => {
-      return [...prev, {name:name,done:false}];
-    });
-  }
 
-  function removeTask(indexToRemove) {
-    setTasks(prev => {
-      return prev.filter((taskObject,index) => index !== indexToRemove);
-    });
-  }
+  let calcBmi = (event) => {
+    //prevent submitting
+    event.preventDefault()
 
-  function updateTaskDone(taskIndex, newDone) {
-    setTasks(prev => {
-      const newTasks = [...prev];
-      newTasks[taskIndex].done = newDone;
-      return newTasks;
-    });
-  }
+    if (weight === 0 || height === 0) {
+      alert('Please enter a valid weight and height')
+    } else {
+      let bmi = (weight / (height * height) * 703)
+      setBmi(bmi.toFixed(1))
 
-  const numberComplete = tasks.filter(t => t.done).length;
-  const numberTotal = tasks.length;
+      // Logic for message
 
-  function getMessage() {
-    const percentage = numberComplete/numberTotal * 100;
-    if (percentage === 0) {
-      return 'do it one! 🙏';
+      if (bmi < 25) {
+        setMessage('You are underweight')
+      } else if (bmi >= 25 && bmi < 30) {
+        setMessage('You are a healthy weight')
+      } else {
+        setMessage('You are overweight')
+      }
     }
-    if (percentage === 100) {
-      return 'Good  job for today! 🏝';
-    }
-    return 'Keep on going 💪🏻';
   }
 
-  function renameTask(index,newName) {
-    setTasks(prev => {
-      const newTasks = [...prev];
-      newTasks[index].name = newName;
-      return newTasks;
-    })
+  //  show image based on bmi calculation
+  let imgSrc;
+
+  if (bmi < 1) {
+    imgSrc = null
+  } else {
+    if(bmi < 25) {
+      imgSrc = require('../src/images/underweight.jpeg')
+    } else if (bmi >= 25 && bmi < 30) {
+      imgSrc = require('../src/images/healthyweight.jpeg')
+    } else {
+      imgSrc = require('../src/images/overweight.jpeg')
+    }
+  }
+
+
+  let reload = () => {
+    window.location.reload()
   }
 
   return (
-    <main>
-      <h1>{numberComplete}/{numberTotal} Complete</h1>
-      <h2>{getMessage()}</h2>
-      <TaskForm onAdd={addTask} />
-      {tasks.map((task,index) => (
-        <Task {...task}
-              onRename={newName => renameTask(index,newName)}
-              onTrash={() => removeTask(index)}
-              onToggle={done => updateTaskDone(index, done)} />
-      ))}
-    </main>
+    <div className="app">
+      <div className='container'>
+        <h2 className='center'>BMI Calculator</h2>
+        <form onSubmit={calcBmi}>
+          <div>
+            <label>Weight (lbs)</label>
+            <input value={weight} onChange={(e) => setWeight(e.target.value)} />
+          </div>
+          <div>
+            <label>Height (in)</label>
+            <input value={height} onChange={(event) => setHeight(event.target.value)} />
+          </div>
+          <div>
+            <button className='btn' type='submit'>Submit</button>
+            <button className='btn btn-outline' onClick={reload} type='submit'>Reload</button>
+          </div>
+        </form>
+
+        <div className='center'>
+          <h3>Your BMI is: {bmi}</h3>
+          <p>{message}</p>
+        </div>
+
+        <div className='img-container'>
+          <img src={imgSrc} alt=''></img>
+        </div>
+      </div>
+    </div>
   );
 }
 
